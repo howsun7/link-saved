@@ -110,7 +110,7 @@ def get_links():
     links = []
 
     while True:
-        user_input = input('Enter link: ')
+        user_input = input('Enter link: ').strip()
         link = Link(url=user_input) 
 
         if link.is_empty():
