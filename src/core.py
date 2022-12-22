@@ -9,6 +9,14 @@ class Link:
         self._num_clicks = num_clicks
         self._created_at = datetime.now()
 
+    @property
+    def url(self):
+        return self._url
+
+    @url.setter
+    def url(self, value):
+        self._url = value
+
     def is_valid_link(self):
         is_valid = bool(validators.url(self._url))
         if not is_valid:
@@ -25,8 +33,24 @@ class Link:
 class FileHandler:
     FILE_DIRECTORY = 'data'
 
-    def __init__(self, filename='links.csv'):
+    def __init__(self, filename='links.csv', duplicate_not_allowed=True):
         self._filename = filename
+        self._existing_records = set()
+
+        if duplicate_not_allowed:
+            self._exist_records = self.load_existing_records()
+
+    def load_existing_records(self):
+        filepath = self.get_file_path()
+
+        with open(filepath) as file:
+            reader = csv.reader(file)
+            for idx, row in enumerate(reader):
+                # skip the header row
+                if idx == 0:
+                    continue
+                url = row[0]
+                self._existing_records.add(url)
 
     def save_links(self, links, to_overwrite=False):
         if not links:
@@ -48,7 +72,12 @@ class FileHandler:
                 writer.writeheader()
 
             for link in links:
+                if link.url in self._existing_records:
+                    msg = '{} is not saved because it already exists'.format(link.url)
+                    print(msg)
+                    continue
                 writer.writerow(vars(link))
+                self._existing_records.add(link.url)
             
         return links
 
@@ -74,6 +103,7 @@ class FileHandler:
         file.close()
 
         return existing_fieldnames == new_fieldnames
+
         
 def get_links():
     file_handler = FileHandler()
